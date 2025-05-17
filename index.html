@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spend Billionaire's Money - Enhanced</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f2f5;
+        }
+        
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background-color: #f0f2f5;
+            padding: 15px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .billionaire-card {
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .billionaire-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .selected-billionaire {
+            border: 3px solid #4CAF50;
+            transform: translateY(-5px);
+        }
+        
+        .money-counter {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #2E7D32;
+            transition: all 0.2s;
+        }
+        
+        .item-card {
+            transition: all 0.3s;
+            height: 100%;
+        }
+        
+        .item-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .item-image {
+            height: 180px;
+            object-fit: contain;
+            padding: 10px;
+        }
+        
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .control-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .control-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .quantity {
+            width: 50px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .billionaire-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        
+        .dropdown-button {
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        
+        .dropdown-button.open {
+            transform: rotate(180deg);
+        }
+        
+        .receipt-section {
+            border-top: 2px dashed #666;
+            margin-top: 40px;
+            padding-top: 20px;
+        }
+        
+        .receipt-title {
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .receipt-item {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dotted #ccc;
+            padding: 8px 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .receipt-total {
+            font-weight: bold;
+            border-top: 2px solid #333;
+            margin-top: 10px;
+            padding-top: 10px;
+        }
+        
+        .selector-container {
+            transition: max-height 0.5s ease-out;
+            overflow: hidden;
+        }
+        
+        .selector-container.collapsed {
+            max-height: 0;
+        }
+
+        @media print {
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-20">
+    <header class="sticky-header bg-white">
+        <div class="container mx-auto px-4">
+            <h1 class="text-4xl font-bold text-center text-gray-800 mb-4">Spend Billionaire's Money</h1>
+            
+            <div class="flex flex-col items-center mb-5">
+                <div class="flex items-center justify-center w-full">
+                    <h2 class="text-2xl font-semibold mr-4 text-gray-600">
+                        <span class="selected-billionaire-name">Elon Musk</span>
+                    </h2>
+                    <button class="dropdown-button bg-blue-500 text-white px-3 py-1 rounded-md flex items-center">
+                        <span class="mr-2">Change Billionaire</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+                
+                <div class="money-counter my-3">$409,200,000,000</div>
+                
+                <div class="text-gray-500 text-sm">
+                    Remaining: <span class="remaining-percentage">100</span>%
+                </div>
+            </div>
+            
+            <div class="selector-container w-full">
+                <div class="billionaire-selector flex overflow-x-auto py-4 gap-4">
+                    <!-- Billionaire cards will be dynamically generated here -->
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="itemsContainer">
+            <!-- Product cards will be dynamically generated here -->
+        </div>
+        
+        <section class="receipt-section bg-white rounded-lg shadow-lg p-6 mt-16">
+            <h2 class="receipt-title text-2xl font-bold text-center mb-6">Your Receipt</h2>
+            <div id="receiptItems" class="mb-6">
+                <!-- Receipt items will be dynamically generated here -->
+                <div class="text-center text-gray-500 italic py-8">No purchases yet. Start spending!</div>
+            </div>
+            <div class="receipt-total flex justify-between text-xl font-bold">
+                <span>TOTAL SPENT:</span>
+                <span id="totalSpent">$0</span>
+            </div>
+            <div class="receipt-total flex justify-between text-xl">
+                <span>MONEY REMAINING:</span>
+                <span id="moneyRemaining">$409,200,000,000</span>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Billionaires data
+        const billionaires = [
+            {
+                id: 1,
+                name: "Elon Musk",
+                netWorth: 409200000000,
+                image: "https://www.forbes.com/profile/elon-musk/"
+            },
+            {
+                id: 2,
+                name: "Jeff Bezos",
+                netWorth: 206000000000,
+                image: "https://specials-images.forbesimg.com/imageserve/65a68c7868694c78e7dbc368/416x416.jpg"
+            },
+            {
+                id: 3,
+                name: "Mark Zuckerberg",
+                netWorth: 220900000000,
+                image: "https://specials-images.forbesimg.com/imageserve/63e43624f49c9d3510d49a0c/416x416.jpg"
+            },
+            {
+                id: 4,
+                name: "Larry Ellison",
+                netWorth: 173000000000,
+                image: "https://specials-images.forbesimg.com/imageserve/59d7e8e731358e542c0390cb/416x416.jpg"
+            },
+            {
+                id: 5,
+                name: "Warren Buffett",
+                netWorth: 159700000000,
+                image: "https://specials-images.forbesimg.com/imageserve/631fe148932a53a0bdc7b945/416x416.jpg"
+            },
+            {
+                id: 6,
+                name: "Bernard Arnault",
+                netWorth: 148700000000,
+                image: "https://specials-images.forbesimg.com/imageserve/5dc05518ca425400079c659f/416x416.jpg"
+            },
+            {
+                id: 7,
+                name: "Larry Page",
+                netWorth: 149000000000,
+                image: "https://specials-images.forbesimg.com/imageserve/59d5062131358e542c039071/416x416.jpg"
+            },
+            {
+                id: 8,
+                name: "Steve Ballmer",
+                netWorth: 151000000000,
+                image: "https://specials-images.forbesimg.com/imageserve/59d6514f4bbe6f37dd9ff712/416x416.jpg"
+            },
+            {
+                id: 9,
+                name: "Sergey Brin",
+                netWorth: 140000000000,
+                image: "https://specials-images.forbesimg.com/imageserve/59d64a60a7ea436b47b36e49/416x416.jpg"
+            },
+            {
+                id: 10,
+                name: "Bill Gates",
+                netWorth: 113000000000,
+                image: "https://specials-images.forbesimg.com/imageserve/62d700cd6094d6dac7e31d7e/416x416.jpg"
+            }
+        ];
+
+        // Products data with enhanced image quality
+        const products = [
+            {
+                id: 1,
+                name: "Big Mac",
+                price: 2,
+                image: "https://neal.fun/spend/images/big-mac.jpg",
+                quantity: 0
+            },
+            {
+                id: 2,
+                name: "Flip Flops",
+                price: 3,
+                image: "https://neal.fun/spend/images/flip-flops.jpg",
+                quantity: 0
+            },
+            {
+                id: 3,
+                name: "Coca-Cola Pack",
+                price: 5,
+                image: "https://neal.fun/spend/images/coca-cola-pack.jpg",
+                quantity: 0
+            },
+            {
+                id: 4,
+                name: "Movie Ticket",
+                price: 12,
+                image: "https://neal.fun/spend/images/movie-ticket.jpg",
+                quantity: 0
+            },
+            {
+                id: 5,
+                name: "Book",
+                price: 15,
+                image: "https://neal.fun/spend/images/book.jpg",
+                quantity: 0
+            },
+            {
+                id: 6,
+                name: "Lobster Dinner",
+                price: 45,
+                image: "https://neal.fun/spend/images/lobster-dinner.jpg",
+                quantity: 0
+            },
+            {
+                id: 7,
+                name: "Video Game",
+                price: 60,
+                image: "https://neal.fun/spend/images/video-game.jpg",
+                quantity: 0
+            },
+            {
+                id: 8,
+                name: "Amazon Echo",
+                price: 99,
+                image: "https://neal.fun/spend/images/amazon-echo.jpg",
+                quantity: 0
+            },
+            {
+                id: 9,
+                name: "Year of Netflix",
+                price: 100,
+                image: "https://neal.fun/spend/images/year-of-netflix.jpg",
+                quantity: 0
+            },
+            {
+                id: 10,
+                name: "Air Jordans",
+                price: 125,
+                image: "https://neal.fun/spend/images/air-jordans.jpg",
+                quantity: 0
+            },
+            {
+                id: 11,
+                name: "Airpods",
+                price: 199,
+                image: "https://neal.fun/spend/images/airpods.jpg",
+                quantity: 0
+            },
+            {
+                id: 12,
+                name: "Gaming Console",
+                price: 299,
+                image: "https://neal.fun/spend/images/gaming-console.jpg",
+                quantity: 0
+            },
+            {
+                id: 13,
+                name: "Drone",
+                price: 350,
+                image: "https://neal.fun/spend/images/drone.jpg",
+                quantity: 0
+            },
+            {
+                id: 14,
+                name: "Smartphone",
+                price: 699,
+                image: "https://neal.fun/spend/images/smartphone.jpg",
+                quantity: 0
+            },
+            {
+                id: 15,
+                name: "Bike",
+                price: 800,
+                image: "https://neal.fun/spend/images/bike.jpg",
+                quantity: 0
+            },
+            {
+                id: 16,
+                name: "Kitten",
+                price: 1500,
+                image: "https://neal.fun/spend/images/kitten.jpg",
+                quantity: 0
+            },
+            {
+                id: 17,
+                name: "Puppy",
+                price: 1500,
+                image: "https://neal.fun/spend/images/puppy.jpg",
+                quantity: 0
+            },
+            {
+                id: 18,
+                name: "Auto Rickshaw",
+                price: 2300,
+                image: "https://neal.fun/spend/images/auto-rickshaw.jpg",
+                quantity: 0
+            },
+            {
+                id: 19,
+                name: "Horse",
+                price: 2500,
+                image: "https://neal.fun/spend/images/horse.jpg",
+                quantity: 0
+            },
+            {
+                id: 20,
+                name: "Acre of Farmland",
+                price: 3000,
+                image: "https://neal.fun/spend/images/acre-of-farmland.jpg",
+                quantity: 0
+            },
+            {
+                id: 21,
+                name: "Designer Handbag",
+                price: 5500,
+                image: "https://neal.fun/spend/images/designer-handbag.jpg",
+                quantity: 0
+            },
+            {
+                id: 22,
+                name: "Hot Tub",
+                price: 6000,
+                image: "https://neal.fun/spend/images/hot-tub.jpg",
+                quantity: 0
+            },
+            {
+                id: 23,
+                name: "Luxury Wine",
+                price: 7000,
+                image: "https://neal.fun/spend/images/luxury-wine.jpg",
+                quantity: 0
+            },
+            {
+                id: 24,
+                name: "Diamond Ring",
+                price: 10000,
+                image: "https://neal.fun/spend/images/diamond-ring.jpg",
+                quantity: 0
+            },
+            {
+                id: 25,
+                name: "Jet Ski",
+                price: 12000,
+                image: "https://neal.fun/spend/images/jet-ski.jpg",
+                quantity: 0
+            },
+            {
+                id: 26,
+                name: "Rolex",
+                price: 15000,
+                image: "https://neal.fun/spend/images/rolex.jpg",
+                quantity: 0
+            },
+            {
+                id: 27,
+                name: "Ford F-150",
+                price: 30000,
+                image: "https://neal.fun/spend/images/ford-f-150.jpg",
+                quantity: 0
+            },
+            {
+                id: 28,
+                name: "Tesla",
+                price: 75000,
+                image: "https://neal.fun/spend/images/tesla.jpg",
+                quantity: 0
+            },
+            {
+                id: 29,
+                name: "Monster Truck",
+                price: 150000,
+                image: "https://neal.fun/spend/images/monster-truck.jpg",
+                quantity: 0
+            },
+            {
+                id: 30,
+                name: "Ferrari",
+                price: 250000,
+                image: "https://neal.fun/spend/images/ferrari.jpg",
+                quantity: 0
+            },
+            {
+                id: 31,
+                name: "Single Family Home",
+                price: 300000,
+                image: "https://neal.fun/spend/images/single-family-home.jpg",
+                quantity: 0
+            },
+            {
+                id: 32,
+                name: "Gold Bar",
+                price: 700000,
+                image: "https://neal.fun/spend/images/gold-bar.jpg",
+                quantity: 0
+            },
+            {
+                id: 33,
+                name: "McDonalds Franchise",
+                price: 1500000,
+                image: "https://neal.fun/spend/images/mcdonalds-franchise.jpg",
+                quantity: 0
+            },
+            {
+                id: 34,
+                name: "Superbowl Ad",
+                price: 5250000,
+                image: "https://neal.fun/spend/images/superbowl-ad.jpg",
+                quantity: 0
+            },
+            {
+                id: 35,
+                name: "Yacht",
+                price: 7500000,
+                image: "https://neal.fun/spend/images/yacht.jpg",
+                quantity: 0
+            },
+            {
+                id: 36,
+                name: "M1 Abrams",
+                price: 8000000,
+                image: "https://neal.fun/spend/images/m1-abrams.jpg",
+                quantity: 0
+            },
+            {
+                id: 37,
+                name: "Formula 1 Car",
+                price: 15000000,
+                image: "https://neal.fun/spend/images/formula-1-car.jpg",
+                quantity: 0
+            },
+            {
+                id: 38,
+                name: "Apache Helicopter",
+                price: 31000000,
+                image: "https://neal.fun/spend/images/apache-helicopter.jpg",
+                quantity: 0
+            },
+            {
+                id: 39,
+                name: "Mansion",
+                price: 45000000,
+                image: "https://neal.fun/spend/images/mansion.jpg",
+                quantity: 0
+            },
+            {
+                id: 40,
+                name: "Make a Movie",
+                price: 100000000,
+                image: "https://neal.fun/spend/images/make-a-movie.jpg",
+                quantity: 0
+            },
+            {
+                id: 41,
+                name: "Boeing 747",
+                price: 148000000,
+                image: "https://neal.fun/spend/images/boeing-747.jpg",
+                quantity: 0
+            },
+            {
+                id: 42,
+                name: "Mona Lisa",
+                price: 780000000,
+                image: "https://neal.fun/spend/images/mona-lisa.jpg",
+                quantity: 0
+            },
+            {
+                id: 43,
+                name: "Skyscraper",
+                price: 850000000,
+                image: "https://neal.fun/spend/images/skyscraper.jpg",
+                quantity: 0
+            },
+            {
+                id: 44,
+                name: "Cruise Ship",
+                price: 930000000,
+                image: "https://neal.fun/spend/images/cruise-ship.jpg",
+                quantity: 0
+            },
+            {
+                id: 45,
+                name: "NBA Team",
+                price: 2120000000,
+                image: "https://neal.fun/spend/images/nba-team.jpg",
+                quantity: 0
+            }
+        ];
+
+        // Global variables
+        let selectedBillionaire = billionaires[0];
+        let moneyLeft = selectedBillionaire.netWorth;
+        let totalSpent = 0;
+
+        // Format money with commas
+        function formatMoney(amount) {
+            return '$' + amount.toLocaleString('en-US');
+        }
+
+        // Update money display
+        function updateMoneyDisplay() {
+            document.querySelector('.money-counter').textContent = formatMoney(moneyLeft);
+            
+            const remainingPercentage = ((moneyLeft / selectedBillionaire.netWorth) * 100).toFixed(2);
+            document.querySelector('.remaining-percentage').textContent = remainingPercentage;
+            
+            document.getElementById('totalSpent').textContent = formatMoney(totalSpent);
+            document.getElementById('moneyRemaining').textContent = formatMoney(moneyLeft);
+            
+            // Update receipt
+            updateReceipt();
+        }
+
+        // Add or remove items
+        function changeQuantity(productId, change) {
+            const product = products.find(p => p.id === productId);
+            const priceInDollars = product.price;
+            const priceInCents = priceInDollars * 100;
+            
+            // Check if we can buy
+            if (change > 0 && moneyLeft < priceInDollars) {
+                alert("You don't have enough money!");
+                return;
+            }
+            
+            // Check if we can sell
+            if (change < 0 && product.quantity <= 0) {
+                return;
+            }
+            
+            product.quantity += change;
+            moneyLeft -= (priceInDollars * change);
+            totalSpent += (priceInDollars * change);
+            
+            // Update product display
+            const quantityElement = document.querySelector(`#quantity-${productId}`);
+            quantityElement.textContent = product.quantity;
+            
+            // Update money display
+            updateMoneyDisplay();
+            
+            // Update control buttons
+            updateButtons();
+        }
+
+        // Update all control buttons
+        function updateButtons() {
+            products.forEach(product => {
+                const minusBtn = document.querySelector(`#minus-${product.id}`);
+                const plusBtn = document.querySelector(`#plus-${product.id}`);
+                
+                // Disable minus button if quantity is 0
+                if (product.quantity <= 0) {
+                    minusBtn.classList.add('disabled');
+                    minusBtn.classList.remove('bg-red-500', 'hover:bg-red-700');
+                    minusBtn.classList.add('bg-gray-300');
+                } else {
+                    minusBtn.classList.remove('disabled', 'bg-gray-300');
+                    minusBtn.classList.add('bg-red-500', 'hover:bg-red-700');
+                }
+                
+                // Disable plus button if not enough money
+                if (moneyLeft < product.price) {
+                    plusBtn.classList.add('disabled');
+                    plusBtn.classList.remove('bg-green-500', 'hover:bg-green-700');
+                    plusBtn.classList.add('bg-gray-300');
+                } else {
+                    plusBtn.classList.remove('disabled', 'bg-gray-300');
+                    plusBtn.classList.add('bg-green-500', 'hover:bg-green-700');
+                }
+            });
+        }
+
+        // Update receipt
+        function updateReceipt() {
+            const receiptContainer = document.getElementById('receiptItems');
+            receiptContainer.innerHTML = '';
+            
+            const purchasedItems = products.filter(p => p.quantity > 0);
+            
+            if (purchasedItems.length === 0) {
+                receiptContainer.innerHTML = '<div class="text-center text-gray-500 italic py-8">No purchases yet. Start spending!</div>';
+                return;
+            }
+            
+            purchasedItems.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                
+                const receiptItem = document.createElement('div');
+                receiptItem.className = 'receipt-item';
+                receiptItem.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="mr-2">${item.quantity}x</span>
+                        <span>${item.name}</span>
+                    </div>
+                    <div>${formatMoney(itemTotal)}</div>
+                `;
+                
+                receiptContainer.appendChild(receiptItem);
+            });
+        }
+
+        // Select billionaire
+        function selectBillionaire(billionaireId) {
+            selectedBillionaire = billionaires.find(b => b.id === billionaireId);
+            
+            // Reset all quantities
+            products.forEach(p => p.quantity = 0);
+            
+            // Update money left
+            moneyLeft = selectedBillionaire.netWorth;
+            totalSpent = 0;
+            
+            // Update UI
+            document.querySelector('.selected-billionaire-name').textContent = selectedBillionaire.name;
+            updateMoneyDisplay();
+            updateButtons();
+            
+            // Update selected card
+            document.querySelectorAll('.billionaire-card').forEach(card => {
+                card.classList.remove('selected-billionaire');
+            });
+            document.querySelector(`#billionaire-${billionaireId}`).classList.add('selected-billionaire');
+            
+            // Collapse selector
+            const selectorContainer = document.querySelector('.selector-container');
+            selectorContainer.classList.add('collapsed');
+            document.querySelector('.dropdown-button i').classList.remove('open');
+        }
+
+        // Toggle dropdown
+        function toggleDropdown() {
+            const selectorContainer = document.querySelector('.selector-container');
+            const dropdownIcon = document.querySelector('.dropdown-button i');
+            
+            if (selectorContainer.classList.contains('collapsed')) {
+                selectorContainer.classList.remove('collapsed');
+                dropdownIcon.classList.add('open');
+            } else {
+                selectorContainer.classList.add('collapsed');
+                dropdownIcon.classList.remove('open');
+            }
+        }
+
+        // Initialize billionaire selector
+        function initBillionaireSelector() {
+            const billionaireSelector = document.querySelector('.billionaire-selector');
+            billionaireSelector.innerHTML = '';
+            
+            billionaires.forEach(billionaire => {
+                const billionaireCard = document.createElement('div');
+                billionaireCard.className = 'billionaire-card bg-white rounded-lg shadow-lg p-4 flex flex-col items-center min-w-max';
+                billionaireCard.id = `billionaire-${billionaire.id}`;
+                
+                if (billionaire.id === selectedBillionaire.id) {
+                    billionaireCard.classList.add('selected-billionaire');
+                }
+                
+                // Use alternative URLs for Forbes images
+                let imageUrl;
+                switch(billionaire.id) {
+                    case 1: // Elon Musk
+                        imageUrl = "https://specials-images.forbesimg.com/imageserve/62d5bbf9e6697df92a27831e/416x416.jpg";
+                        break;
+                    case 2: // Jeff Bezos
+                        imageUrl = "https://specials-images.forbesimg.com/imageserve/5f469ea85cc82fc8d6083f05/416x416.jpg";
+                        break;
+                    case 3: // Mark Zuckerberg
+                        imageUrl = "https://specials-images.forbesimg.com/imageserve/5c76b7d331358e35dd2773a9/416x416.jpg";
+                        break;
+                    case 4: // Larry Ellison
+                        imageUrl = "https://specials-images.forbesimg.com/imageserve/59d6514f4bbe6f37dd9ff712/416x416.jpg";
+                        break;
+                    case 5: // Warren Buffett
+                        imageUrl = "https://specials-images.forbesimg.com/imageserve/5babb7f1a7ea4342a948b79a/416x416.jpg";
+                        break;
+                    case 6: // Bernard Arnault
+                        imageUrl = "https://specials-images.forbesimg.com/imageserve/5dc05518ca425400079c659f/416x416.jpg";
+                        break;
+                    case 7: // Larry Page
+                        imageUrl = "https://specials-images.forbesimg.com/imageserve/59d5062131358e542c039071/416x416.jpg";
+                        break;
+                    case 8: // Steve Ballmer
+                        imageUrl = "https://specials-images.forbesimg.com/imageserve/59d6514f4bbe6f37dd9ff712/416x416.jpg";
+                        break;
+                    case 9: // Sergey Brin
+                        imageUrl = "https://specials-images.forbesimg.com/imageserve/59d64a60a7ea436b47b36e49/416x416.jpg";
+                        break;
+                    case 10: // Bill Gates
+                        imageUrl = "https://specials-images.forbesimg.com/imageserve/5f4ebe0f87612dab4f12a597/416x416.jpg";
+                        break;
+                    default:
+                        imageUrl = billionaire.image;
+                }
+                
+                billionaireCard.innerHTML = `
+                    <img src="${imageUrl}" alt="${billionaire.name}" class="billionaire-image mb-3">
+                    <h3 class="font-bold text-lg text-center">${billionaire.name}</h3>
+                    <p class="text-green-600 font-semibold">${formatMoney(billionaire.netWorth)}</p>
+                `;
+                
+                billionaireCard.addEventListener('click', () => selectBillionaire(billionaire.id));
+                billionaireSelector.appendChild(billionaireCard);
+            });
+        }
+
+        // Initialize products
+        function initProducts() {
+            const itemsContainer = document.getElementById('itemsContainer');
+            itemsContainer.innerHTML = '';
+            
+            products.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'item-card bg-white rounded-lg shadow-lg overflow-hidden';
+                
+                productCard.innerHTML = `
+                    <img src="${product.image}" alt="${product.name}" class="item-image w-full">
+                    <div class="p-4">
+                        <h3 class="text-lg font-bold mb-2">${product.name}</h3>
+                        <p class="text-green-600 font-semibold mb-4">${formatMoney(product.price)}</p>
+                        <div class="quantity-control">
+                            <button id="minus-${product.id}" class="control-btn bg-red-500 text-white mr-2 disabled bg-gray-300">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <div id="quantity-${product.id}" class="quantity">${product.quantity}</div>
+                            <button id="plus-${product.id}" class="control-btn bg-green-500 text-white ml-2">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                itemsContainer.appendChild(productCard);
+                
+                // Add event listeners
+                document.querySelector(`#minus-${product.id}`).addEventListener('click', () => {
+                    changeQuantity(product.id, -1);
+                });
+                
+                document.querySelector(`#plus-${product.id}`).addEventListener('click', () => {
+                    changeQuantity(product.id, 1);
+                });
+            });
+        }
+
+        // Initialize app
+        function init() {
+            // Set up event handlers
+            document.querySelector('.dropdown-button').addEventListener('click', toggleDropdown);
+            
+            // Initially collapse the selector
+            setTimeout(() => {
+                document.querySelector('.selector-container').classList.add('collapsed');
+            }, 1000);
+            
+            // Initialize components
+            initBillionaireSelector();
+            initProducts();
+            updateButtons();
+            updateMoneyDisplay();
+        }
+
+        // Run initialization when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
